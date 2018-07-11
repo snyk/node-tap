@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict'
 
-const node = process.execPath
+let node // set later from options or defaults
 const fs = require('fs')
 const spawn = require('child_process').spawn
 const fg = require('foreground-child')
@@ -74,6 +74,8 @@ const main = _ => {
   if (!options)
     return
 
+  node = options.nodePath
+
   process.stdout.on('error', er => {
     /* istanbul ignore else */
     if (er.code === 'EPIPE')
@@ -145,6 +147,8 @@ const constructDefaultArgs = _ => {
     lines: 0,
     statements: 0,
     jobs: 1,
+    nodePath: process.execPath,
+    testFilePattern: '/\.js$/',
     outputFile: null,
     comments: false
   }
@@ -190,6 +194,7 @@ const parseArgs = (args, options) => {
 
   let defaultCoverage = options.pipeToService
   let dumpConfig = false
+  let testFilePattern = options.testFilePattern
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]
@@ -404,6 +409,14 @@ const parseArgs = (args, options) => {
         options.comments = true
         continue
 
+      case '--node-path':
+        options.nodePath = val || args[++i]
+        continue
+
+      case '--test-file-pattern':
+        testFilePattern = val || args[++i]
+        continue
+
       case '--':
         options.files = options.files.concat(args.slice(i + 1))
         i = args.length
@@ -423,6 +436,8 @@ const parseArgs = (args, options) => {
   // default to tap for non-tty envs
   if (!options.reporter)
     options.reporter = options.color ? 'classic' : 'tap'
+
+  options.testFilePattern = strToRegExp(testFilePattern)
 
   if (dumpConfig)
     return console.log(JSON.stringify(options, null, 2))
@@ -736,8 +751,7 @@ const runAllFiles = (options, saved, tap) => {
     } else {
       if (options.jobs > 1)
         opt.buffered = isParallelOk(parallelOk, file) !== false
-
-      if (file.match(/\.m?js$/)) {
+      if (file.match(options.testFilePattern)) {
         const args = options.nodeArgs.concat(file).concat(options.testArgs)
         tap.spawn(node, args, opt, file)
       } else if (file.match(/\.ts$/)) {
