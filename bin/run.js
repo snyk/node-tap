@@ -649,7 +649,7 @@ const runAllFiles = (options, env, tap, processDB) => {
       if (options.flow)
         options['node-arg'].push('-r', flowNode)
 
-      if (options.ts && /\.tsx?$/.test(file)) {
+      if (options.ts) {
         debug('ts file', file)
         const compilerOpts = JSON.stringify({
           ...JSON.parse(process.env.TS_NODE_COMPILER_OPTIONS || '{}'),
