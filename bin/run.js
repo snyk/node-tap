@@ -649,49 +649,64 @@ const runAllFiles = (options, env, tap, processDB) => {
       if (options.flow)
         options['node-arg'].push('-r', flowNode)
 
-      if (options.ts && /\.tsx?$/.test(file)) {
-        debug('ts file', file)
-        const compilerOpts = JSON.stringify({
-          ...JSON.parse(process.env.TS_NODE_COMPILER_OPTIONS || '{}'),
-          jsx: 'react'
-        })
-        opt.env = {
-          ...env,
-          TS_NODE_COMPILER_OPTIONS: compilerOpts,
+      let testRuntime = options['node-path'] || node;
+
+      if (options['test-file-pattern']) {
+        if (file.match(strToRegExp(options['test-file-pattern']))) {
+          debug('test-file-pattern matching file', file)
+          const args = [
+            ...(options.esm ? ['-r', esm] : []),
+            ...options['node-arg'],
+            file,
+            ...options['test-arg']
+          ]
+          tap.spawn(testRuntime, args, opt, file)
         }
-        const args = [
-          '-r', tsNode,
-          ...options['node-arg'],
-          file,
-          ...options['test-arg']
-        ]
-        tap.spawn(node, args, opt, file)
-      } else if (options.jsx && /\.jsx$/.test(file)) {
-        debug('jsx file', file)
-        const args = [
-          ...(options['node-arg']),
-          jsx,
-          file,
-          ...(options['test-arg']),
-        ]
-        tap.spawn(node, args, opt, file)
-      } else if (/\.jsx$|\.tsx?$|\.[mc]?js$/.test(file)) {
-        debug('js file', file)
-        const args = [
-          ...(options.esm ? ['-r', esm] : []),
-          ...options['node-arg'],
-          file,
-          ...options['test-arg']
-        ]
-        tap.spawn(node, args, opt, file)
-      } else if (/\.tap$/.test(file)) {
-        debug('tap file', file)
-        tap.spawn('cat', [file], opt, file)
-      } else if (isexe.sync(options.files[i])) {
-        debug('executable', file)
-        tap.spawn(options.files[i], options['test-arg'], opt, file)
       } else {
-        debug('not a test file', file)
+        if (options.ts && /\.tsx?$/.test(file)) {
+          debug('ts file', file)
+          const compilerOpts = JSON.stringify({
+            ...JSON.parse(process.env.TS_NODE_COMPILER_OPTIONS || '{}'),
+            jsx: 'react'
+          })
+          opt.env = {
+            ...env,
+            TS_NODE_COMPILER_OPTIONS: compilerOpts,
+          }
+          const args = [
+            '-r', tsNode,
+            ...options['node-arg'],
+            file,
+            ...options['test-arg']
+          ]
+          tap.spawn(testRuntime, args, opt, file)
+        } else if (options.jsx && /\.jsx$/.test(file)) {
+          debug('jsx file', file)
+          const args = [
+            ...(options['node-arg']),
+            jsx,
+            file,
+            ...(options['test-arg']),
+          ]
+          tap.spawn(testRuntime, args, opt, file)
+        } else if (/\.jsx$|\.tsx?$|\.[mc]?js$/.test(file)) {
+          debug('js file', file)
+          const args = [
+            ...(options.esm ? ['-r', esm] : []),
+            ...options['node-arg'],
+            file,
+            ...options['test-arg']
+          ]
+          tap.spawn(testRuntime, args, opt, file)
+        } else if (/\.tap$/.test(file)) {
+          debug('tap file', file)
+          tap.spawn('cat', [file], opt, file)
+        } else if (isexe.sync(options.files[i])) {
+          debug('executable', file)
+          tap.spawn(options.files[i], options['test-arg'], opt, file)
+        } else {
+          debug('not a test file', file)
+        }
       }
     }
   }

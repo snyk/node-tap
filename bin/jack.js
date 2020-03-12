@@ -522,6 +522,17 @@ Much more documentation available at: https://www.node-tap.org/
                   `
   }),
 
+  'test-file-pattern': opt({
+    hint: 'pattern',
+    description: `A custom regex for identifying test files, which overrides
+              concept of "supported extensions".`
+  }),
+
+  'node-path': opt({
+    hint: 'file',
+    description: `The node runtime to use to execute test files`
+  }),
+
   'test-ignore': opt({
     hint: 'pattern',
     default: '$.',
