@@ -32,7 +32,7 @@
     "own-or-env": "^1.0.1",
     "rimraf": "^2.6.2",
     "signal-exit": "^3.0.0",
-    "source-map-support": "^0.5.6",
+    "source-map-support": "^0.5.19",
     "stack-utils": "^1.0.0",
     "tap-mocha-reporter": "^3.0.7",
     "tap-parser": "^7.0.0",
